@@ -93,7 +93,6 @@
 		wantedBy = [ "multi-user.target" ];
 		serviceConfig = {
 			User = "erica";
-			Type = "simple";
                         WorkingDirectory = "/home/erica";
 			ExecStart = "${pkgs.jdk}/bin/java -jar /home/erica/tresorier-backend-uber.jar";
 			ExecStop = "/bin/kill -15 $MAINPID";
