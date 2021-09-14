@@ -37,9 +37,8 @@
 # adminsys requires
 		wget vim git
 # backend requires
-		postgresql jdk16_headless
+			postgresql jdk16_headless
 # frontend requires
-		nodePackages.http-server
 	];
 
 # Some programs need SUID wrappers, can be configured further or are
@@ -54,7 +53,7 @@
 	services.openssh.passwordAuthentication = true;
 
 # Open ports in the firewall.
-	networking.firewall.allowedTCPPorts = [ 22 7000 8080 ];
+	networking.firewall.allowedTCPPorts = [ 22 7000 80 443 ];
 # networking.firewall.allowedUDPPorts = [ ... ];
 # Or disable the firewall altogether.
 # networking.firewall.enable = false;
@@ -96,20 +95,30 @@
 		wantedBy = [ "multi-user.target" ];
 		serviceConfig = {
 			User = "erica";
-                        WorkingDirectory = "/home/erica";
+			WorkingDirectory = "/home/erica";
 			ExecStart = "${pkgs.jdk}/bin/java -jar /home/erica/tresorier-backend-uber.jar";
 			Restart = "always";
 		};
 	};
-	
-	systemd.services.frontend = {
-		description = "run the application frontend";
-		wantedBy = [ "multi-user.target" ];
-		serviceConfig = {
-			User = "erica";
-                        WorkingDirectory = "/home/erica";
-			ExecStart = "${pkgs.nodePackages.http-server}/bin/http-server /home/erica/front";
-			Restart = "always";
+
+
+######
+# HTTPS : Lets encrypt
+#####
+
+	security.acme.acceptTerms = true;
+	security.acme.email = "erica@tresorier.me";
+	users.users.nginx.extraGroups = [ "acme" ];
+	services.nginx = {
+		enable = true;
+		virtualHosts = {
+			"mon.agatha-budget.fr" = {
+				forceSSL = true;
+				enableACME = true;
+				locations."/" = {
+					root = "/var/www/front";
+				};
+			};
 		};
 	};
 }
