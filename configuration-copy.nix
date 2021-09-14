@@ -37,7 +37,7 @@
 # adminsys requires
 		wget vim git
 # backend requires
-			postgresql jdk16_headless
+		postgresql jdk16_headless
 # frontend requires
 		nodePackages.http-server
 	];
@@ -98,7 +98,17 @@
 			User = "erica";
                         WorkingDirectory = "/home/erica";
 			ExecStart = "${pkgs.jdk}/bin/java -jar /home/erica/tresorier-backend-uber.jar";
-			ExecStop = "/bin/kill -15 $MAINPID";
+			Restart = "always";
+		};
+	};
+	
+	systemd.services.frontend = {
+		description = "run the application frontend";
+		wantedBy = [ "multi-user.target" ];
+		serviceConfig = {
+			User = "erica";
+                        WorkingDirectory = "/home/erica";
+			ExecStart = "${pkgs.nodePackages.http-server}/bin/http-server /home/erica/front";
 			Restart = "always";
 		};
 	};
