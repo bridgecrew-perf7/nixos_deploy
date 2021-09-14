@@ -34,9 +34,12 @@
 # List packages installed in system profile. To search, run:
 # $ nix search wget
 	environment.systemPackages = with pkgs; [
+# adminsys requires
 		wget vim git
-# backend required
+# backend requires
 			postgresql jdk16_headless
+# frontend requires
+		nodePackages.http-server
 	];
 
 # Some programs need SUID wrappers, can be configured further or are
@@ -51,7 +54,7 @@
 	services.openssh.passwordAuthentication = true;
 
 # Open ports in the firewall.
-	networking.firewall.allowedTCPPorts = [ 22 7000 ];
+	networking.firewall.allowedTCPPorts = [ 22 7000 8080 ];
 # networking.firewall.allowedUDPPorts = [ ... ];
 # Or disable the firewall altogether.
 # networking.firewall.enable = false;
