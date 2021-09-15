@@ -53,7 +53,7 @@
 	services.openssh.passwordAuthentication = true;
 
 # Open ports in the firewall.
-	networking.firewall.allowedTCPPorts = [ 22 443 ];
+	networking.firewall.allowedTCPPorts = [ 7000 22 443 80];
 # networking.firewall.allowedUDPPorts = [ ... ];
 # Or disable the firewall altogether.
 # networking.firewall.enable = false;
@@ -111,12 +111,21 @@
 	users.users.nginx.extraGroups = [ "acme" ];
 	services.nginx = {
 		enable = true;
+		recommendedProxySettings = true;
+		recommendedTlsSettings = true;
 		virtualHosts = {
 			"mon.agatha-budget.fr" = {
 				forceSSL = true;
 				enableACME = true;
 				locations."/" = {
 					root = "/var/www/front";
+				};
+			};
+			"api.agatha-budget.fr" = {
+				forceSSL = true;
+				enableACME = true;
+				locations."/" = {
+					proxyPass = "http://localhost:7000";
 				};
 			};
 		};
