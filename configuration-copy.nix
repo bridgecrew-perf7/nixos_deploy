@@ -133,5 +133,17 @@
 			};
 		};
 	};
+
+######
+# Cron : db save
+#####
+	services.cron = {
+		enable = true;
+		systemCronJobs = [
+			"0 1 * * *	erica	sh /home/erica/scripts/export_database.sh"
+		];
+	};
+
+
 }
 
