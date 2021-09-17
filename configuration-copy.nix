@@ -37,7 +37,7 @@
 # adminsys requires
 		wget vim git
 # backend requires
-			postgresql jdk16_headless
+		postgresql jdk16_headless flyway
 # frontend requires
 	];
 
@@ -81,10 +81,11 @@
 			enableTCPIP = true;
 			authentication = pkgs.lib.mkOverride 10 ''
 				local all all trust
+				host all all 127.0.0.1/32 trust
 				host all all ::1/128 trust
 				'';
 			initialScript = pkgs.writeText "backend-initScript" ''
-				CREATE ROLE nixcloud WITH LOGIN PASSWORD 'nixcloud' CREATEDB;
+				CREATE USER nixcloud WITH LOGIN PASSWORD 'nixcloud' CREATEDB;
 			CREATE DATABASE tresorier;
 			GRANT ALL PRIVILEGES ON DATABASE tresorier TO nixcloud;
 			'';
@@ -96,7 +97,8 @@
 		serviceConfig = {
 			User = "erica";
 			WorkingDirectory = "/home/erica";
-			ExecStart = "${pkgs.jdk}/bin/java -jar /home/erica/tresorier-backend-uber.jar";
+			ExecStartPre = "${pkgs.flyway}/bin/flyway -configFiles=flyway.conf migrate";  
+			ExecStart = "${pkgs.jdk}/bin/java -jar tresorier-backend-uber.jar";
 			Restart = "always";
 		};
 	};
@@ -117,8 +119,9 @@
 			"mon.agatha-budget.fr" = {
 				forceSSL = true;
 				enableACME = true;
+				root = "/var/www/front";
 				locations."/" = {
-					root = "/var/www/front";
+					tryFiles = "$uri $uri/ /index.html"; #not working yet :'(
 				};
 			};
 			"api.agatha-budget.fr" = {
