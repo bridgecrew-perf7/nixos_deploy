@@ -77,7 +77,7 @@
 
 		services.postgresql = {
 			enable = true;
-			package = pkgs.postgresql_10;
+			package = pkgs.postgresql_11;
 			enableTCPIP = true;
 			authentication = pkgs.lib.mkOverride 10 ''
 				local all all trust
@@ -86,8 +86,7 @@
 				'';
 			initialScript = pkgs.writeText "backend-initScript" ''
 				CREATE USER nixcloud WITH LOGIN PASSWORD 'nixcloud' CREATEDB;
-			CREATE DATABASE tresorier;
-			GRANT ALL PRIVILEGES ON DATABASE tresorier TO nixcloud;
+			CREATE DATABASE tresorier OWNER nixcloud;
 			'';
 		};
 
@@ -97,9 +96,9 @@
 		serviceConfig = {
 			User = "erica";
 			WorkingDirectory = "/home/erica";
-			ExecStartPre = "${pkgs.flyway}/bin/flyway -configFiles=flyway.conf migrate";  
+			ExecStartPre = "/run/current-system/sw/bin/sh scripts/export_database.sh ${pkgs.postgresql_11} ; ${pkgs.flyway}/bin/flyway -configFiles=flyway.conf migrate";  
 			ExecStart = "${pkgs.jdk}/bin/java -jar tresorier-backend-uber.jar";
-			Restart = "always";
+			#Restart = "always";
 		};
 	};
 
@@ -140,10 +139,8 @@
 	services.cron = {
 		enable = true;
 		systemCronJobs = [
-			"0 1 * * *	erica	sh /home/erica/scripts/export_database.sh"
+			"0 1 * * *	erica	/run/current-system/sw/bin/sh /home/erica/scripts/export_database.sh ${pkgs.postgresql}"
 		];
 	};
-
-
 }
 
