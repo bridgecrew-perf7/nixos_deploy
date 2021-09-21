@@ -1,6 +1,7 @@
 # Edit this configuration file to define what should be installed on
 # your system.  Help is available in the configuration.nix(5) man page
 # and in the NixOS manual (accessible by running ‘nixos-help’).
+#teqst
 
 { config, pkgs, ... }:
 
@@ -37,7 +38,7 @@
 # adminsys requires
 		wget vim git
 # backend requires
-		postgresql jdk16_headless flyway
+			postgresql_13 jdk16_headless flyway
 # frontend requires
 	];
 
@@ -53,7 +54,7 @@
 	services.openssh.passwordAuthentication = true;
 
 # Open ports in the firewall.
-	networking.firewall.allowedTCPPorts = [ 7000 22 443 80];
+	networking.firewall.allowedTCPPorts = [ 7000 22 443 80 5432 ];
 # networking.firewall.allowedUDPPorts = [ ... ];
 # Or disable the firewall altogether.
 # networking.firewall.enable = false;
@@ -77,28 +78,40 @@
 
 		services.postgresql = {
 			enable = true;
-			package = pkgs.postgresql_11;
+			package = pkgs.postgresql_13;
 			enableTCPIP = true;
-			authentication = pkgs.lib.mkOverride 10 ''
+			authentication = pkgs.lib.mkOverride 13 ''
 				local all all trust
 				host all all 127.0.0.1/32 trust
 				host all all ::1/128 trust
+				host all all 0.0.0.0/0 md5
 				'';
-			initialScript = pkgs.writeText "backend-initScript" ''
-				CREATE USER nixcloud WITH LOGIN PASSWORD 'nixcloud' CREATEDB;
-			CREATE DATABASE tresorier OWNER nixcloud;
-			'';
 		};
 
+######
+#####
+# NOT WORKING
+#####
+#####
+	systemd.services.ensureDB = {
+		description = "ensure tresorier db exist and create one if needed";
+		wantedBy = [ "multi-user.target" ];
+		serviceConfig = {
+			User = "erica";
+			WorkingDirectory = "/home/erica";		
+			ExecStart = ''/run/current-system/sw/bin/echo "SELECT 'CREATE DATABASE mydb' WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = 'mydb')\gexec" | psql -U postgres'';
+			#${pkgs.postgresql_13}/bin/psql -U postgres -tc \"SELECT 1 FROM pg_database WHERE datname = \'tresorier\'\" | grep -q 1 || ${pkgs.postgresql_13}/bin/psql -U postgres -c \"CREATE DATABASE tresorier\"
+		};
+	};
 	systemd.services.backend = {
 		description = "run the application backend";
 		wantedBy = [ "multi-user.target" ];
 		serviceConfig = {
 			User = "erica";
 			WorkingDirectory = "/home/erica";
-			ExecStartPre = "/run/current-system/sw/bin/sh scripts/export_database.sh ${pkgs.postgresql_11} ; ${pkgs.flyway}/bin/flyway -configFiles=flyway.conf migrate";  
+			ExecStartPre = "/run/current-system/sw/bin/sh scripts/export_database.sh ${pkgs.postgresql_13} ; ${pkgs.flyway}/bin/flyway -configFiles=flyway.conf migrate";  
 			ExecStart = "${pkgs.jdk}/bin/java -jar tresorier-backend-uber.jar";
-			#Restart = "always";
+#Restart = "always";
 		};
 	};
 
@@ -121,26 +134,26 @@
 				root = "/var/www/front";
 				locations."/" = {
 					tryFiles = "$uri $uri/ /index.html"; #not working yet :'(
-				};
-			};
-			"api.agatha-budget.fr" = {
-				forceSSL = true;
-				enableACME = true;
-				locations."/" = {
-					proxyPass = "http://localhost:7000";
-				};
-			};
-		};
-	};
+							};
+							};
+							"api.agatha-budget.fr" = {
+							forceSSL = true;
+							enableACME = true;
+							locations."/" = {
+							proxyPass = "http://localhost:7000";
+							};
+							};
+							};
+							};
 
 ######
 # Cron : db save
 #####
-	services.cron = {
-		enable = true;
-		systemCronJobs = [
-			"0 1 * * *	erica	/run/current-system/sw/bin/sh /home/erica/scripts/export_database.sh ${pkgs.postgresql}"
-		];
-	};
+							services.cron = {
+							enable = true;
+							systemCronJobs = [
+							"0 1 * * *	erica	/run/current-system/sw/bin/sh /home/erica/scripts/export_database.sh ${pkgs.postgresql_13}"
+							];
+							};
 }
 
