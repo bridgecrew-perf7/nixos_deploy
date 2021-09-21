@@ -109,8 +109,8 @@
 		serviceConfig = {
 			User = "erica";
 			WorkingDirectory = "/home/erica";
-			ExecStartPre = "/run/current-system/sw/bin/sh scripts/export_database.sh ${pkgs.postgresql_13} ; ${pkgs.flyway}/bin/flyway -configFiles=flyway.conf migrate";  
-			ExecStart = "${pkgs.jdk}/bin/java -jar tresorier-backend-uber.jar";
+			ExecStartPre = "/run/current-system/sw/bin/sh server/scripts/export_database.sh ${pkgs.postgresql_13} ; ${pkgs.flyway}/bin/flyway -configFiles=flyway.conf migrate";  
+			ExecStart = "${pkgs.jdk}/bin/java -jar server/tresorier-backend-uber.jar";
 #Restart = "always";
 		};
 	};
@@ -131,7 +131,7 @@
 			"mon.agatha-budget.fr" = {
 				forceSSL = true;
 				enableACME = true;
-				root = "/var/www/front";
+				root = "/var/www/front/";
 				locations."/" = {
 					tryFiles = "$uri $uri/ /index.html"; #not working yet :'(
 							};
@@ -152,7 +152,7 @@
 							services.cron = {
 							enable = true;
 							systemCronJobs = [
-							"0 1 * * *	erica	/run/current-system/sw/bin/sh /home/erica/scripts/export_database.sh ${pkgs.postgresql_13}"
+							"0 1 * * *	erica	/run/current-system/sw/bin/sh /home/erica/server/scripts/export_database.sh ${pkgs.postgresql_13}"
 							];
 							};
 }
