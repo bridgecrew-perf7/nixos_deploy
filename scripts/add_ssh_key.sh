@@ -1,2 +1,2 @@
-eval "$(ssh-agent -s)"
+eval `ssh-agent -s`
 ssh-add $1 
