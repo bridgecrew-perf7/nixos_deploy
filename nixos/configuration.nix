@@ -75,34 +75,20 @@
 ######
 # Backend setup
 #####
-
-		services.postgresql = {
-			enable = true;
-			package = pkgs.postgresql_13;
-			enableTCPIP = true;
-			authentication = pkgs.lib.mkOverride 13 ''
-				local all all trust
-				host all all 127.0.0.1/32 trust
-				host all all ::1/128 trust
-				host all all 0.0.0.0/0 md5
-				'';
-		};
+	services.postgresql = {
+		enable = true;
+		package = pkgs.postgresql_13;
+		enableTCPIP = true;
+		authentication = pkgs.lib.mkOverride 13 ''
+			local all all trust
+			host all all 127.0.0.1/32 trust
+			host all all ::1/128 trust
+			host all all 0.0.0.0/0 md5
+			'';
+	};
 
 ######
-#####
-# NOT WORKING
-#####
-#####
-	systemd.services.ensureDB = {
-		description = "ensure tresorier db exist and create one if needed";
-		wantedBy = [ "multi-user.target" ];
-		serviceConfig = {
-			User = "erica";
-			WorkingDirectory = "/home/erica";		
-			ExecStart = ''/run/current-system/sw/bin/echo "SELECT 'CREATE DATABASE mydb' WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = 'mydb')\gexec" | psql -U postgres'';
-			#${pkgs.postgresql_13}/bin/psql -U postgres -tc \"SELECT 1 FROM pg_database WHERE datname = \'tresorier\'\" | grep -q 1 || ${pkgs.postgresql_13}/bin/psql -U postgres -c \"CREATE DATABASE tresorier\"
-		};
-	};
+
 	systemd.services.backend = {
 		description = "run the application backend";
 		wantedBy = [ "multi-user.target" ];
@@ -121,7 +107,7 @@
 #####
 
 	security.acme.acceptTerms = true;
-	security.acme.email = "erica@tresorier.me";
+	security.acme.email = "erica@agatha-budget.fr";
 	users.users.nginx.extraGroups = [ "acme" ];
 	services.nginx = {
 		enable = true;
@@ -133,27 +119,35 @@
 				enableACME = true;
 				root = "/var/www/front/";
 				locations."/" = {
-					tryFiles = "$uri $uri/ /index.html"; #not working yet :'(
-							};
-							};
-							"api.agatha-budget.fr" = {
-							forceSSL = true;
-							enableACME = true;
-							locations."/" = {
-							proxyPass = "http://localhost:7000";
-							};
-							};
-							};
-							};
+					tryFiles = "$uri $uri/ /index.html"; 
+				};
+			};
+			"beta.agatha-budget.fr" = {
+				forceSSL = true;
+				enableACME = true;
+				root = "/var/www/beta/";
+				locations."/" = {
+					tryFiles = "$uri $uri/ /index.html"; # redirect subpages url
+				};
+			};
+			"api.agatha-budget.fr" = {
+				forceSSL = true;
+				enableACME = true;
+				locations."/" = {
+					proxyPass = "http://localhost:7000";
+				};
+			};
+		};
+	};
 
 ######
 # Cron : db save
 #####
-							services.cron = {
-							enable = true;
-							systemCronJobs = [
-							"0 1 * * *	erica	/run/current-system/sw/bin/sh /home/erica/server/scripts/export_database.sh ${pkgs.postgresql_13}"
-							];
-							};
+	services.cron = {
+		enable = true;
+		systemCronJobs = [
+			"0 1 * * *	erica	/run/current-system/sw/bin/sh /home/erica/server/scripts/export_database.sh ${pkgs.postgresql_13}"
+		];
+	};
 }
 
