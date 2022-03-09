@@ -40,6 +40,8 @@
 # backend requires
 			postgresql_13 jdk16_headless flyway
 # frontend requires
+# forum requires
+		php
 	];
 
 # Some programs need SUID wrappers, can be configured further or are
@@ -126,6 +128,14 @@
 				forceSSL = true;
 				enableACME = true;
 				root = "/var/www/beta/";
+				locations."/" = {
+					tryFiles = "$uri $uri/ /index.html"; # redirect subpages url
+				};
+			};
+			"forum.agatha-budget.fr" = {
+				forceSSL = true;
+				enableACME = true;
+				root = "/var/www/forum/";
 				locations."/" = {
 					tryFiles = "$uri $uri/ /index.html"; # redirect subpages url
 				};
