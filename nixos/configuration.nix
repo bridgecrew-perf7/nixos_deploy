@@ -3,8 +3,12 @@
 # and in the NixOS manual (accessible by running ‘nixos-help’).
 #teqst
 
-{ config, pkgs, ... }:
-
+{ config, pkgs, lib, ... }:
+let 
+  app = "forum";
+  domain = "${app}.agatha-budget.fr";
+  dataDir = "/var/www/${app}";
+in 
 {
 	imports =
 		[ # Include the results of the hardware scan.
@@ -107,6 +111,30 @@
 # Forum PHP
 #####
 
+services.phpfpm.pools.${app} = {
+    user = app;
+    settings = {
+      "listen.owner" = config.services.nginx.user;
+      "pm" = "dynamic";
+      "pm.max_children" = 32;
+      "pm.max_requests" = 500;
+      "pm.start_servers" = 2;
+      "pm.min_spare_servers" = 2;
+      "pm.max_spare_servers" = 5;
+      "php_admin_value[error_log]" = "stderr";
+      "php_admin_flag[log_errors]" = true;
+      "catch_workers_output" = true;
+    };
+    phpEnv."PATH" = lib.makeBinPath [ pkgs.php ];
+};
+users.users.${app} = {
+    isSystemUser = true;
+    createHome = true;
+    home = dataDir;
+    group  = app;
+  };
+users.groups.${app} = {};
+
 ######
 # HTTPS : Lets encrypt
 #####
@@ -137,7 +165,15 @@
 			"forum.agatha-budget.fr" = {
 				forceSSL = true;
 				enableACME = true;
-				root = "/var/www/forum/";
+				locations."/" = {
+      					root = dataDir;
+      					extraConfig = ''
+        					fastcgi_split_path_info ^(.+\.php)(/.+)$;
+        					fastcgi_pass unix:${config.services.phpfpm.pools.${app}.socket};
+        					include ${pkgs.nginx}/conf/fastcgi_params;
+        					include ${pkgs.nginx}/conf/fastcgi.conf;
+      					'';
+     				};
 			};
 			"api.agatha-budget.fr" = {
 				forceSSL = true;
