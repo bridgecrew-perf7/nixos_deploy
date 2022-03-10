@@ -163,7 +163,7 @@ users.groups.forum = {};
 				forceSSL = true;
 				enableACME = true;
       				root = "/var/www/forum/";
-				locations."~ \.php$" = {
+				locations."~ \.php(/|$)" = {
       					extraConfig = ''
         					fastcgi_split_path_info ^(.+\.php)(/.+)$;
         					fastcgi_pass unix:${config.services.phpfpm.pools.forum.socket};
