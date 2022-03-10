@@ -67,7 +67,7 @@
 		extraGroups = [ "wheel" ]; # Enable ‘sudo’ for the user.
 			openssh.authorizedKeys.keyFiles = [/home/erica/.ssh/authorized_keys/erica_nuwa.pub];
 	};
-
+	
 # This value determines the NixOS release with which your system is to be
 # compatible, in order to avoid breaking some software such as database
 # servers. You should change this only after NixOS release notes say you
@@ -103,11 +103,13 @@
 		};
 	};
 
+######
+# Forum PHP
+#####
 
 ######
 # HTTPS : Lets encrypt
 #####
-
 	security.acme.acceptTerms = true;
 	security.acme.email = "erica@agatha-budget.fr";
 	users.users.nginx.extraGroups = [ "acme" ];
@@ -136,9 +138,6 @@
 				forceSSL = true;
 				enableACME = true;
 				root = "/var/www/forum/";
-				locations."/" = {
-					tryFiles = "$uri $uri/ /index.html"; # redirect subpages url
-				};
 			};
 			"api.agatha-budget.fr" = {
 				forceSSL = true;
