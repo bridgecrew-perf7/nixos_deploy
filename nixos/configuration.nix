@@ -172,7 +172,7 @@ users.groups.forum = {};
       					'';
      				};
 				locations."/" = {
-					tryFiles = "$uri $uri/ :404"; # redirect subpages url
+					tryFiles = "$uri /index.php"; # redirect subpages url
 				};
 			};
 			"api.agatha-budget.fr" = {
