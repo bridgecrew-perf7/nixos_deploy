@@ -106,6 +106,8 @@
 # Forum PHP
 #####
 
+# remember to add sudo chmod -R 755 /var/www/forum/ to prevent permission denied
+
 services.phpfpm.pools.forum = {
     user = "forum";
     settings = {
@@ -160,8 +162,8 @@ users.groups.forum = {};
 			"forum.agatha-budget.fr" = {
 				forceSSL = true;
 				enableACME = true;
-				locations."/" = {
-      					root = "/var/www/forum";
+      				root = "/var/www/forum/";
+				locations."~ \.php$" = {
       					extraConfig = ''
         					fastcgi_split_path_info ^(.+\.php)(/.+)$;
         					fastcgi_pass unix:${config.services.phpfpm.pools.forum.socket};
@@ -169,6 +171,9 @@ users.groups.forum = {};
         					include ${pkgs.nginx}/conf/fastcgi.conf;
       					'';
      				};
+				locations."/" = {
+					tryFiles = "$uri $uri/ :404"; # redirect subpages url
+				};
 			};
 			"api.agatha-budget.fr" = {
 				forceSSL = true;
