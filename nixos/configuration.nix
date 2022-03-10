@@ -4,11 +4,6 @@
 #teqst
 
 { config, pkgs, lib, ... }:
-let 
-  app = "forum";
-  domain = "${app}.agatha-budget.fr";
-  dataDir = "/var/www/${app}";
-in 
 {
 	imports =
 		[ # Include the results of the hardware scan.
@@ -111,8 +106,8 @@ in
 # Forum PHP
 #####
 
-services.phpfpm.pools.${app} = {
-    user = app;
+services.phpfpm.pools.forum = {
+    user = "forum";
     settings = {
       "listen.owner" = config.services.nginx.user;
       "pm" = "dynamic";
@@ -127,13 +122,13 @@ services.phpfpm.pools.${app} = {
     };
     phpEnv."PATH" = lib.makeBinPath [ pkgs.php ];
 };
-users.users.${app} = {
+users.users.forum = {
     isSystemUser = true;
     createHome = true;
-    home = dataDir;
-    group  = app;
+    home = "/var/www/forum";
+    group  = "forum";
   };
-users.groups.${app} = {};
+users.groups.forum = {};
 
 ######
 # HTTPS : Lets encrypt
@@ -166,10 +161,10 @@ users.groups.${app} = {};
 				forceSSL = true;
 				enableACME = true;
 				locations."/" = {
-      					root = dataDir;
+      					root = "/var/www/forum";
       					extraConfig = ''
         					fastcgi_split_path_info ^(.+\.php)(/.+)$;
-        					fastcgi_pass unix:${config.services.phpfpm.pools.${app}.socket};
+        					fastcgi_pass unix:${config.services.phpfpm.pools.forum.socket};
         					include ${pkgs.nginx}/conf/fastcgi_params;
         					include ${pkgs.nginx}/conf/fastcgi.conf;
       					'';
