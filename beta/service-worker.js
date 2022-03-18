@@ -14,7 +14,7 @@
 importScripts("https://storage.googleapis.com/workbox-cdn/releases/4.3.1/workbox-sw.js");
 
 importScripts(
-  "/precache-manifest.76c5e60033051ecb2015e81095369b8c.js"
+  "/precache-manifest.cbfb3247b11382d0fef2a421b4ec5f33.js"
 );
 
 workbox.core.setCacheNameDetails({prefix: "agatha-budget"});
